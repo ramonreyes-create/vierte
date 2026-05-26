@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Flipcards – Mein Lieblingstier</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body{
+      margin:0;
+      font-family:Arial, sans-serif;
+      background:#f3f6fb;
+      color:#1f2937;
+    }
+    header{
+      background:linear-gradient(135deg,#1e3a8a,#2563eb,#60a5fa);
+      color:white;
+      text-align:center;
+      padding:38px 20px;
+    }
+    header h1{
+      margin:0;
+      font-size:38px;
+    }
+    header p{
+      font-size:18px;
+      margin-top:8px;
+    }
+    main{
+      max-width:1200px;
+      margin:28px auto;
+      padding:0 18px 40px;
+    }
+    .toolbar{
+      background:white;
+      border-radius:20px;
+      padding:18px;
+      box-shadow:0 6px 18px rgba(0,0,0,.08);
+      text-align:center;
+      margin-bottom:24px;
+    }
+    button{
+      background:#2563eb;
+      color:white;
+      border:none;
+      padding:11px 16px;
+      border-radius:12px;
+      font-size:15px;
+      font-weight:bold;
+      cursor:pointer;
+      margin:5px;
+    }
+    button:hover{
+      background:#1e40af;
+    }
+    .info{
+      text-align:center;
+      background:#eaf2ff;
+      border:1px solid #bfdbfe;
+      border-radius:16px;
+      padding:14px;
+      margin-bottom:22px;
+      font-weight:bold;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+      gap:20px;
+    }
+    .flip-card{
+      height:220px;
+      perspective:1000px;
+      cursor:pointer;
+    }
+    .inner{
+      width:100%;
+      height:100%;
+      position:relative;
+      transition:transform .6s;
+      transform-style:preserve-3d;
+    }
+    .flip-card.flipped .inner{
+      transform:rotateY(180deg);
+    }
+    .face{
+      position:absolute;
+      width:100%;
+      height:100%;
+      backface-visibility:hidden;
+      border-radius:24px;
+      border:5px solid #d1d5db;
+      background:white;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 8px 18px rgba(0,0,0,.12);
+      padding:14px;
+      text-align:center;
+    }
+    .back{
+      transform:rotateY(180deg);
+    }
+    .der .face{border-color:#60a5fa;background:linear-gradient(180deg,#eff6ff,#fff);}
+    .die .face{border-color:#fb7185;background:linear-gradient(180deg,#fff1f2,#fff);}
+    .das .face{border-color:#4ade80;background:linear-gradient(180deg,#f0fdf4,#fff);}
+    .verb .face{border-color:#a78bfa;background:linear-gradient(180deg,#f5f3ff,#fff);}
+    .emoji{
+      font-size:82px;
+      line-height:1;
+    }
+    .word{
+      font-size:29px;
+      font-weight:900;
+      color:#111827;
+    }
+    .hint{
+      margin-top:14px;
+      font-size:14px;
+      font-weight:bold;
+      color:#6b7280;
+    }
+    @media print{
+      header,.toolbar,.info{display:none;}
+      body{background:white;}
+      main{margin:0;padding:8mm;}
+      .grid{grid-template-columns:repeat(3,1fr);gap:8mm;}
+      .flip-card{height:75mm;break-inside:avoid;}
+      .flip-card .inner,.flip-card.flipped .inner{transform:none;}
+      .back{display:none;}
+      .face{box-shadow:none;border-width:3px;}
+      .emoji{font-size:58px;}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Flipcards – Mein Lieblingstier</h1>
+  <p>Bild vorne · Wort hinten</p>
+</header>
+
+<main>
+  <div class="toolbar">
+    <button onclick="showOnly('all')">Alle</button>
+    <button onclick="showOnly('der')">der</button>
+    <button onclick="showOnly('die')">die</button>
+    <button onclick="showOnly('das')">das</button>
+    <button onclick="showOnly('verb')">Verben</button>
+    <button onclick="flipAll()">Alle Wörter zeigen</button>
+    <button onclick="resetAll()">Alle Bilder zeigen</button>
+    <button onclick="window.print()">Drucken</button>
+  </div>
+
+  <div class="info">Klicke auf eine Karte: vorne ist das Bild, hinten steht das Wort.</div>
+
+  <section class="grid" id="grid"></section>
+</main>
+
+<script>
+const cards = [
+  ["die Schlange","🐍","die"],["die Maus","🐭","die"],["die Spinne","🕷️","die"],
+  ["die Schildkröte","🐢","die"],["die Katze","🐱","die"],["die Giraffe","🦒","die"],
+  ["die Kuh","🐄","die"],["die Ente","🦆","die"],["die Biene","🐝","die"],
+  ["die Ziege","🐐","die"],["die Fledermaus","🦇","die"],["die Tiere","🐾","die"],
+  ["der Tiger","🐯","der"],["der Affe","🐵","der"],["der Pinguin","🐧","der"],
+  ["der Hamster","🐹","der"],["der Hund","🐶","der"],["der Löwe","🦁","der"],
+  ["der Vogel","🐦","der"],["der Elefant","🐘","der"],["der Eisbär","🐻‍❄️","der"],
+  ["der Panda","🐼","der"],["der Fisch","🐟","der"],["der Papagei","🦜","der"],
+  ["das Meerschweinchen","🐹","das"],["das Känguru","🦘","das"],["das Krokodil","🐊","das"],
+  ["das Zebra","🦓","das"],["das Schaf","🐑","das"],["das Schwein","🐷","das"],
+  ["das Huhn","🐔","das"],["das Pferd","🐴","das"],
+  ["pflegen","🤲","verb"],["füttern","🥣","verb"],["rennen","🏃","verb"],
+  ["fressen","🍽️","verb"],["klettern","🧗","verb"],["fliegen","✈️","verb"],
+  ["können","💪","verb"],["tauchen","🤿","verb"],["schwimmen","🏊","verb"]
+];
+
+const grid = document.getElementById("grid");
+
+cards.forEach(card => {
+  const div = document.createElement("div");
+  div.className = "flip-card " + card[2];
+  div.dataset.kind = card[2];
+  div.innerHTML = `
+    <div class="inner">
+      <div class="face front">
+        <div class="emoji">${card[1]}</div>
+        <div class="hint">Klick!</div>
+      </div>
+      <div class="face back">
+        <div class="word">${card[0]}</div>
+      </div>
+    </div>
+  `;
+  div.onclick = () => div.classList.toggle("flipped");
+  grid.appendChild(div);
+});
+
+function showOnly(kind){
+  document.querySelectorAll(".flip-card").forEach(card=>{
+    card.style.display = (kind === "all" || card.dataset.kind === kind) ? "block" : "none";
+  });
+}
+
+function flipAll(){
+  document.querySelectorAll(".flip-card").forEach(card=>card.classList.add("flipped"));
+}
+
+function resetAll(){
+  document.querySelectorAll(".flip-card").forEach(card=>card.classList.remove("flipped"));
+}
+</script>
+</body>
+</html>

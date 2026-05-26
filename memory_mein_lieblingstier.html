@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memory – Mein Lieblingstier</title>
+  <style>
+    :root{
+      --bg:#f3f6fb;
+      --text:#1f2937;
+      --blue:#2563eb;
+      --blue-dark:#1e40af;
+      --green:#22c55e;
+      --red:#ef4444;
+      --yellow:#facc15;
+      --card:#ffffff;
+    }
+
+    *{box-sizing:border-box;}
+
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:linear-gradient(180deg,#eff6ff,#ffffff);
+      color:var(--text);
+    }
+
+    header{
+      background:linear-gradient(135deg,#1e3a8a,#2563eb,#60a5fa);
+      color:white;
+      text-align:center;
+      padding:38px 20px;
+    }
+
+    header h1{
+      margin:0;
+      font-size:40px;
+    }
+
+    header p{
+      margin:8px 0 0;
+      font-size:18px;
+    }
+
+    main{
+      max-width:1100px;
+      margin:26px auto;
+      padding:0 18px 40px;
+    }
+
+    .panel{
+      background:white;
+      border-radius:22px;
+      padding:18px;
+      box-shadow:0 8px 22px rgba(0,0,0,.08);
+      margin-bottom:22px;
+      text-align:center;
+    }
+
+    button{
+      background:var(--blue);
+      color:white;
+      border:none;
+      padding:11px 16px;
+      border-radius:12px;
+      font-size:15px;
+      font-weight:bold;
+      cursor:pointer;
+      margin:5px;
+    }
+
+    button:hover{background:var(--blue-dark);}
+    button.secondary{background:#64748b;}
+    button.secondary:hover{background:#475569;}
+
+    .levels button.active{
+      background:var(--green);
+    }
+
+    .stats{
+      display:flex;
+      justify-content:center;
+      flex-wrap:wrap;
+      gap:14px;
+      margin-top:12px;
+      font-weight:bold;
+    }
+
+    .stat{
+      background:#eff6ff;
+      border:1px solid #bfdbfe;
+      border-radius:999px;
+      padding:8px 14px;
+      color:#1e40af;
+    }
+
+    .instruction{
+      background:#fff7d6;
+      border:1px solid #fde68a;
+      border-radius:16px;
+      padding:12px;
+      margin-top:12px;
+    }
+
+    .game{
+      display:grid;
+      gap:14px;
+      justify-content:center;
+    }
+
+    .memory-card{
+      width:145px;
+      height:160px;
+      perspective:1000px;
+      cursor:pointer;
+    }
+
+    .inner{
+      position:relative;
+      width:100%;
+      height:100%;
+      transition:transform .5s;
+      transform-style:preserve-3d;
+    }
+
+    .memory-card.flipped .inner,
+    .memory-card.matched .inner{
+      transform:rotateY(180deg);
+    }
+
+    .face{
+      position:absolute;
+      width:100%;
+      height:100%;
+      backface-visibility:hidden;
+      border-radius:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:10px;
+      box-shadow:0 6px 16px rgba(0,0,0,.12);
+      border:4px solid #93c5fd;
+      background:white;
+      font-weight:bold;
+    }
+
+    .front{
+      background:linear-gradient(135deg,#1e40af,#3b82f6);
+      color:white;
+      font-size:42px;
+    }
+
+    .back{
+      transform:rotateY(180deg);
+      background:white;
+      color:#111827;
+    }
+
+    .emoji{
+      font-size:64px;
+      line-height:1;
+    }
+
+    .word{
+      font-size:24px;
+      line-height:1.2;
+    }
+
+    .memory-card.matched .back{
+      background:#dcfce7;
+      border-color:#22c55e;
+    }
+
+    .memory-card.wrong .back{
+      background:#fee2e2;
+      border-color:#ef4444;
+    }
+
+    .message{
+      font-size:20px;
+      font-weight:bold;
+      color:#166534;
+      margin-top:14px;
+      min-height:28px;
+    }
+
+    @media(max-width:700px){
+      .memory-card{
+        width:110px;
+        height:130px;
+      }
+
+      .emoji{font-size:48px;}
+      .word{font-size:19px;}
+      header h1{font-size:30px;}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Memory – Mein Lieblingstier</h1>
+  <p>Bild und Wort finden</p>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>Wähle die Kartenzahl</h2>
+    <div class="levels">
+      <button onclick="startGame(8)">8 Karten</button>
+      <button onclick="startGame(10)">10 Karten</button>
+      <button onclick="startGame(12)">12 Karten</button>
+      <button onclick="startGame(14)">14 Karten</button>
+      <button onclick="startGame(18)">18 Karten</button>
+      <button onclick="startGame(24)">24 Karten</button>
+    </div>
+
+    <div>
+      <button class="secondary" onclick="restartGame()">Neu starten</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">Karten: <span id="cardsCount">0</span></div>
+      <div class="stat">Versuche: <span id="moves">0</span></div>
+      <div class="stat">Paare: <span id="pairs">0</span></div>
+    </div>
+
+    <div class="instruction">
+      Klicke auf zwei Karten. Finde das passende Paar: <strong>Bild + deutsches Wort</strong>.
+    </div>
+
+    <div class="message" id="message"></div>
+  </section>
+
+  <section class="game" id="game"></section>
+</main>
+
+<script>
+const vocabulary = [
+  {word:"die Schlange", emoji:"🐍"},
+  {word:"die Maus", emoji:"🐭"},
+  {word:"die Spinne", emoji:"🕷️"},
+  {word:"die Schildkröte", emoji:"🐢"},
+  {word:"die Katze", emoji:"🐱"},
+  {word:"die Giraffe", emoji:"🦒"},
+  {word:"die Kuh", emoji:"🐄"},
+  {word:"die Ente", emoji:"🦆"},
+  {word:"die Biene", emoji:"🐝"},
+  {word:"die Ziege", emoji:"🐐"},
+  {word:"die Fledermaus", emoji:"🦇"},
+  {word:"die Tiere", emoji:"🐾"},
+  {word:"der Tiger", emoji:"🐯"},
+  {word:"der Affe", emoji:"🐵"},
+  {word:"der Pinguin", emoji:"🐧"},
+  {word:"der Hamster", emoji:"🐹"},
+  {word:"der Hund", emoji:"🐶"},
+  {word:"der Löwe", emoji:"🦁"},
+  {word:"der Vogel", emoji:"🐦"},
+  {word:"der Elefant", emoji:"🐘"},
+  {word:"der Eisbär", emoji:"🐻‍❄️"},
+  {word:"der Panda", emoji:"🐼"},
+  {word:"der Fisch", emoji:"🐟"},
+  {word:"der Papagei", emoji:"🦜"},
+  {word:"das Meerschweinchen", emoji:"🐹"},
+  {word:"das Känguru", emoji:"🦘"},
+  {word:"das Krokodil", emoji:"🐊"},
+  {word:"das Zebra", emoji:"🦓"},
+  {word:"das Schaf", emoji:"🐑"},
+  {word:"das Schwein", emoji:"🐷"},
+  {word:"das Huhn", emoji:"🐔"},
+  {word:"das Pferd", emoji:"🐴"},
+  {word:"pflegen", emoji:"🤲"},
+  {word:"füttern", emoji:"🥣"},
+  {word:"rennen", emoji:"🏃"},
+  {word:"fressen", emoji:"🍽️"},
+  {word:"klettern", emoji:"🧗"},
+  {word:"fliegen", emoji:"✈️"},
+  {word:"können", emoji:"💪"},
+  {word:"tauchen", emoji:"🤿"},
+  {word:"schwimmen", emoji:"🏊"}
+];
+
+let currentCardCount = 12;
+let firstCard = null;
+let secondCard = null;
+let lockBoard = false;
+let moves = 0;
+let matchedPairs = 0;
+let totalPairs = 0;
+
+function shuffle(array){
+  return array.sort(() => Math.random() - 0.5);
+}
+
+function startGame(cardCount){
+  currentCardCount = cardCount;
+  document.querySelectorAll(".levels button").forEach(btn => {
+    btn.classList.toggle("active", btn.textContent.startsWith(cardCount));
+  });
+
+  const pairCount = cardCount / 2;
+  totalPairs = pairCount;
+  matchedPairs = 0;
+  moves = 0;
+  firstCard = null;
+  secondCard = null;
+  lockBoard = false;
+
+  document.getElementById("moves").textContent = moves;
+  document.getElementById("pairs").textContent = matchedPairs + " / " + totalPairs;
+  document.getElementById("cardsCount").textContent = cardCount;
+  document.getElementById("message").textContent = "";
+
+  const selected = shuffle([...vocabulary]).slice(0, pairCount);
+  let deck = [];
+
+  selected.forEach((item, index) => {
+    deck.push({
+      id: index,
+      type: "image",
+      content: item.emoji,
+      word: item.word
+    });
+    deck.push({
+      id: index,
+      type: "word",
+      content: item.word,
+      word: item.word
+    });
+  });
+
+  deck = shuffle(deck);
+  renderDeck(deck, cardCount);
+}
+
+function renderDeck(deck, cardCount){
+  const game = document.getElementById("game");
+  game.innerHTML = "";
+
+  let columns = 4;
+  if(cardCount === 8) columns = 4;
+  if(cardCount === 10) columns = 5;
+  if(cardCount === 12) columns = 4;
+  if(cardCount === 14) columns = 7;
+  if(cardCount === 18) columns = 6;
+  if(cardCount === 24) columns = 6;
+
+  game.style.gridTemplateColumns = `repeat(${columns}, minmax(100px, 145px))`;
+
+  deck.forEach((card, index) => {
+    const div = document.createElement("div");
+    div.className = "memory-card";
+    div.dataset.id = card.id;
+    div.dataset.type = card.type;
+    div.dataset.index = index;
+
+    const backContent = card.type === "image"
+      ? `<div class="emoji">${card.content}</div>`
+      : `<div class="word">${card.content}</div>`;
+
+    div.innerHTML = `
+      <div class="inner">
+        <div class="face front">?</div>
+        <div class="face back">${backContent}</div>
+      </div>
+    `;
+
+    div.addEventListener("click", () => flipCard(div));
+    game.appendChild(div);
+  });
+}
+
+function flipCard(card){
+  if(lockBoard) return;
+  if(card.classList.contains("flipped")) return;
+  if(card.classList.contains("matched")) return;
+
+  card.classList.add("flipped");
+
+  if(!firstCard){
+    firstCard = card;
+    return;
+  }
+
+  secondCard = card;
+  moves++;
+  document.getElementById("moves").textContent = moves;
+
+  checkMatch();
+}
+
+function checkMatch(){
+  const sameId = firstCard.dataset.id === secondCard.dataset.id;
+  const differentType = firstCard.dataset.type !== secondCard.dataset.type;
+
+  if(sameId && differentType){
+    firstCard.classList.add("matched");
+    secondCard.classList.add("matched");
+    matchedPairs++;
+    document.getElementById("pairs").textContent = matchedPairs + " / " + totalPairs;
+    resetTurn();
+
+    if(matchedPairs === totalPairs){
+      document.getElementById("message").textContent = "Sehr gut! Du hast alle Paare gefunden.";
+    }
+  } else {
+    lockBoard = true;
+    firstCard.classList.add("wrong");
+    secondCard.classList.add("wrong");
+
+    setTimeout(() => {
+      firstCard.classList.remove("flipped", "wrong");
+      secondCard.classList.remove("flipped", "wrong");
+      resetTurn();
+    }, 900);
+  }
+}
+
+function resetTurn(){
+  [firstCard, secondCard] = [null, null];
+  lockBoard = false;
+}
+
+function restartGame(){
+  startGame(currentCardCount);
+}
+
+startGame(12);
+</script>
+
+</body>
+</html>
